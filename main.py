@@ -85,7 +85,7 @@ def remove_user(user_ID: int, db: Session = Depends(get_db)):
 
 
 # Login route
-@app.get("/login")
+@app.post("/login")
 def login(email: str = Query(...), password: str = Query(...), db: Session = Depends(get_db)):
     user = crud.get_user_by_email(db, email)
     if not user:
