@@ -3,7 +3,6 @@ from datetime import datetime, timedelta
 import jwt
 import secrets
 from fastapi import Depends, FastAPI, HTTPException, Security
-from fastapi import Query
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 from sqlalchemy.testing import db
@@ -86,7 +85,7 @@ def remove_user(user_ID: int, db: Session = Depends(get_db)):
 
 # Login route
 @app.post("/login")
-def login(email: str = Query(...), password: str = Query(...), db: Session = Depends(get_db)):
+def login(email: str, password: str, db: Session = Depends(get_db)):
     user = crud.get_user_by_email(db, email)
     if not user:
         raise HTTPException(status_code=402, detail="Email not registered")
