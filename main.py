@@ -91,7 +91,7 @@ def login(email: str, password: str, db: Session = Depends(get_db)):
         raise HTTPException(status_code=402, detail="Email not registered")
     if not verify_password(plain_password=password, hashed_password=user.password):
         raise HTTPException(status_code=401, detail="Incorrect password")
-    return {"name": user.name, "surname":user.surname}
+    return user
 
 
 @app.post("/create_cart", response_model=schemas.Cart)
