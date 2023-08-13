@@ -1,16 +1,14 @@
-from datetime import datetime, timedelta
-
 import jwt
 import secrets
 from fastapi import Depends, FastAPI, HTTPException, Security
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 from sqlalchemy.testing import db
+from starlette.middleware.cors import CORSMiddleware
 
 from authentication import schemas, models, crud
 from authentication.crud import verify_password
 from authentication.database import SessionLocal, engine
-from authentication.hashing import get_hashed
 
 # Generates a strong random secret key of 32 bytes (256 bits)
 SECRET_KEY = secrets.token_urlsafe(32)
@@ -20,7 +18,21 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 30  # Token expiration time in minutes
 # create the database tables
 models.Base.metadata.create_all(bind=engine)
 
+origins = [
+    "http://localhost",         # Replace with your Django project's domain
+    "http://localhost:8000",    # Replace with any other domains you need
+]
+
 app = FastAPI()
+
+# Add CORS middleware to the app
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 # Dependency
@@ -199,6 +211,7 @@ def create_admin(email: str, password: str, db: Session = Depends(get_db)):
 def create_item(item: schemas.ItemCreate, db: Session = Depends(get_db)):
     return crud.create_item(db, item)
 
+
 # Get a single item by ID
 @app.get("/items/{item_id}", response_model=schemas.Item)
 def read_item(item_id: int, db: Session = Depends(get_db)):
@@ -207,10 +220,12 @@ def read_item(item_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Item not found")
     return db_item
 
+
 # Get all items
 @app.get("/items/", response_model=list[schemas.Item])
 def read_items(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     return crud.get_items(db, skip=skip, limit=limit)
+
 
 # Update an item
 @app.put("/items/{item_id}", response_model=schemas.Item)
@@ -220,6 +235,7 @@ def update_item(item_id: int, item_update: schemas.ItemUpdate, db: Session = Dep
         raise HTTPException(status_code=404, detail="Item not found")
     return db_item
 
+
 # Delete an item
 @app.delete("/items/{item_id}", response_model=schemas.Item)
 def delete_item(item_id: int, db: Session = Depends(get_db)):
@@ -227,4 +243,3 @@ def delete_item(item_id: int, db: Session = Depends(get_db)):
     if db_item is None:
         raise HTTPException(status_code=404, detail="Item not found")
     return db_item
-
